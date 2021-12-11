@@ -35,15 +35,10 @@ public:
 
     }
 
-    E pop() {
-        if (isEmpty()) return NULL;
-
-        E answer = stack[t];
-        stack[t] = NULL;
+    void pop() {
+        if (isEmpty()) return ;
 
         t--;
-
-        return answer;
     }
 
 };

@@ -5,15 +5,16 @@
 using namespace std;
 
 list < string > infixtoPostfix(string);
-double evaluatePostfix(list < string > );
+string postfixToInfix(list < string >);
+void evaluatePostfix(list < string > );
 
 int main() {
     string infix;
     list < string > postfix;
     getline(cin, infix);
     postfix = infixtoPostfix(infix);
-    cout.precision(9);
-    cout << fixed << evaluatePostfix(postfix) << endl;;
+    evaluatePostfix(postfix);
+
 
     return 0;
 }
@@ -125,22 +126,62 @@ list < string > infixtoPostfix(string infix) {
     return postfix;
 
 }
-
-double evaluatePostfix(list < string > postfix) {
+string postfixToInfix(list<string> postfix){
     /*---------------------------Main Function---------------------------*/
+    Stack<string> S(postfix.size());
+
+    for (auto &x : postfix)
+    {
+        if (isOperator(x))
+        {
+            string FirstOp = S.top();
+            S.pop();
+            string SecondOp = S.top();
+            S.pop();
+            S.push("(" + SecondOp + x + FirstOp + ")");
+        }
+        else
+        {
+            S.push(x);
+        }
+    }
+
+    return S.top();
+}
+
+
+
+void evaluatePostfix(list < string > postfix) {
+    /*---------------------------Main Function---------------------------*/
+    cout << postfixToInfix(postfix) << endl;
+    if(postfix.size()==1){
+        return ;
+    }
     double a, b;
     Stack < double > S(postfix.size());
+    list<string> temp;
+    bool flag=false;
 
-    for (const auto & x: postfix) {
-        if (isOperator(x.c_str())) {
+    for (auto &x: postfix) {
+        if(flag==true){
+            temp.push_back(x);
+            continue;
+        }
+        else if (isOperator(x.c_str())) {
             a = S.top();
             S.pop();
             b = S.top();
             S.pop();
             S.push(operation(a, b, * x.c_str()));
+            int stackSize=S.Size();
+            for(int i=0;i<stackSize;i++){
+                temp.push_front(to_string(S.top()));
+                S.pop();
+            }
+            flag=true;
         } else {
             S.push(stod(x));
         }
     }
-    return S.top();
+    evaluatePostfix(temp);
 }

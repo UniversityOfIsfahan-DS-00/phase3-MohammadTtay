@@ -6,14 +6,27 @@ using namespace std;
 
 list < string > infixtoPostfix(string);
 string postfixToInfix(list < string >);
-void evaluatePostfix(list < string > );
+double evaluatePostfix(list < string > );
+bool isValid(string);
 
 int main() {
     string infix;
     list < string > postfix;
     getline(cin, infix);
-    postfix = infixtoPostfix(infix);
-    evaluatePostfix(postfix);
+    if(!isValid(infix)) cout << "Error\n";
+    else {
+        try{
+            postfix = infixtoPostfix(infix);
+            cout << evaluatePostfix(postfix) << endl;
+        }
+        catch(string a){
+            cout << a << endl;
+        }
+
+        catch(...){
+            cout <<"Error"<<endl;
+        }
+    }
 
 
     return 0;
@@ -67,9 +80,27 @@ double operation(double a, double b, char Operator) {
         return b * a;
         break;
     case '/':
+        if(a == 0){
+            string str = "Can't Divide By Zero";
+            throw str;
+        }
         return b / a;
         break;
     case '^':
+        if(b<0){
+            int x;
+            x = int(a);
+            if(x!=a){
+                string str = "Calculation Outside Of Accepted Range";
+                throw str;
+            }
+        }
+        if(b==0){
+            if(a<0){
+                string str = "Calculation Outside Of Accepted Range";
+                throw str;
+            }
+        }
         return pow(b, a);
         break;
     default:
@@ -99,11 +130,31 @@ list < string > infixtoPostfix(string infix) {
             temp += infix[i];
             if (isOperator(infix[i + 1]) || infix[i + 1] == ' ' || infix[i + 1] == '(' || infix[i + 1] == ')') postfix.push_back(temp);
         } else if (isOperator(infix[i])) {
-            if (infix[i] == '-' && infix[i - 1] == '(') {
-                infix.insert(i, 1, '0');
-                i--;
-                continue;
+            if(infix[i]=='-'){
+                if (i==0) {
+                    infix.insert(i+1, 1, '1');
+                    infix.insert(i+2, 1, '*');
+                    temp+='-';
+                    continue;
+                }
+                else if (infix[i - 1] == '(' && infix[i+1]=='(') {
+                    infix.insert(i+1, 1, '1');
+                    infix.insert(i+2, 1, '*');
+                    temp+='-';
+                    continue;
+                }
+                else if (infix[i - 1] == '(' && isOperand(infix[i+1])&&infix[i+2]=='^') {
+                    infix.insert(i+1, 1, '1');
+                    infix.insert(i+2, 1, '*');
+                    temp+='-';
+                    continue;
+                }
+                else if (infix[i - 1] == '(' && isOperand(infix[i+1])) {
+                    temp+='-';
+                    continue;
+                }
             }
+
             temp = "";
             while (!S.isEmpty() && checkTwoOperators(S.top(), infix[i])) {
                 string tempChar = "";
@@ -151,12 +202,14 @@ string postfixToInfix(list<string> postfix){
 
 
 
-void evaluatePostfix(list < string > postfix) {
+double evaluatePostfix(list < string > postfix) {
     /*---------------------------Main Function---------------------------*/
-    cout << postfixToInfix(postfix) << endl;
+
     if(postfix.size()==1){
-        return ;
+        return stod(postfix.front());
     }
+    cout << postfixToInfix(postfix) << endl;
+
     double a, b;
     Stack < double > S(postfix.size());
     list<string> temp;
@@ -172,7 +225,12 @@ void evaluatePostfix(list < string > postfix) {
             S.pop();
             b = S.top();
             S.pop();
-            S.push(operation(a, b, * x.c_str()));
+            try {
+                S.push(operation(a, b, * x.c_str()));
+            }  catch (string a) {
+                throw std::move(a);
+            }
+
             int stackSize=S.Size();
             for(int i=0;i<stackSize;i++){
                 temp.push_front(to_string(S.top()));
@@ -183,5 +241,60 @@ void evaluatePostfix(list < string > postfix) {
             S.push(stod(x));
         }
     }
-    evaluatePostfix(temp);
+    return evaluatePostfix(temp);
+}
+bool validParenthesis(string infix){
+    string parenthesis;
+    for(auto x : infix){
+        if(x=='(' || x == ')'){
+            parenthesis.push_back(x);
+        }
+    }
+    Stack<char> S(parenthesis.size());
+
+    for (int i = 0; i < parenthesis.length(); i++)
+    {
+        if (parenthesis[i] == '(')
+        {
+            S.push(parenthesis[i]);
+            continue;
+        }
+
+        if(parenthesis[i]==')') {
+            if(S.isEmpty()) return false;
+            S.pop();
+        }
+    }
+
+    return (S.isEmpty());
+}
+bool isValid(string infix){
+    int infixSize = infix.size();
+
+    if(!validParenthesis(infix)) return false;
+
+    if((isOperator(infix[0]) && infix[0]!='-') || isOperator(infix[infixSize-1])){
+        return false;
+    }
+    string DotCheck;
+    for(int i=0;i<infixSize-1;i++){
+        DotCheck+=infix[i];
+        if (infix[i]=='('){
+            if(infix[i+1]==')' || (isOperator(infix[i+1]) && infix[i+1] !='-')){
+                return false;
+            }
+        }
+
+        if(isOperator(infix[i])){
+            if(isOperator(infix[i+1]) || infix[i+1]==')' || infix[i+1]=='.' || infix[i-1]=='.'){
+                return false;
+            }
+            if(count(DotCheck.begin(), DotCheck.end(), '.') > 1) return false;
+            DotCheck="";
+        }
+    }
+    if(count(DotCheck.begin(), DotCheck.end(), '.') > 1) return false;
+
+    return true;
+
 }

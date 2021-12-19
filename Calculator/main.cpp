@@ -4,10 +4,26 @@
 
 using namespace std;
 
+class Node{
+public:
+    string data;
+    Node* left;
+    Node* right;
+
+    Node(string val)
+    {
+        this->data = val;
+        left = NULL;
+        right = NULL;
+    }
+};
+
 list < string > infixtoPostfix(string);
 string postfixToInfix(list < string >);
 double evaluatePostfix(list < string > );
 bool isValid(string);
+Node* BTree(list<string>);
+void printTree(Node *,int = 0);
 
 int main() {
     string infix;
@@ -17,6 +33,7 @@ int main() {
     else {
         try{
             postfix = infixtoPostfix(infix);
+            printTree(BTree(postfix));
             cout << evaluatePostfix(postfix) << endl;
         }
         catch(string a){
@@ -297,4 +314,42 @@ bool isValid(string infix){
 
     return true;
 
+}
+
+Node *BTree(list<string> postfix){
+    Stack<Node*> S;
+    Node* Temp;
+    for (const auto &x : postfix) {
+        if (x == "+" || x == "-" || x == "*" || x == "/" || x == "^") {
+            Temp = new Node(x);
+            Temp->right=S.top();
+            S.pop();
+            Temp->left=S.top();
+            S.pop();
+            S.push(Temp);
+        }
+    else {
+        Temp = new Node(x);
+        S.push(Temp);
+    }
+
+}
+    return Temp;
+}
+
+void printTree(Node *root, int space)
+{
+    if (root == NULL)
+        return;
+
+    space += 10;
+
+    printTree(root->right, space);
+
+    cout<<endl;
+    for (int i = 10; i < space; i++)
+        cout<<" ";
+    cout<<root->data<<"\n";
+
+    printTree(root->left, space);
 }
